@@ -17,8 +17,8 @@ const margin = {
   bottom: 65,
   left: 90
 }
-const xAxisLabelOffset = 50
-const yAxisLabelOffset = 40
+const xAxisLabelOffset = 80
+const yAxisLabelOffset = 45
 
 const App = () => {
   const data = useData()
@@ -32,11 +32,11 @@ const App = () => {
   const innerHeight = height - margin.top - margin.bottom
   const innerWidth = width - margin.right - margin.left
 
-  const xValue = (d) => d.timestamp
+  const xValue = (d) => d['Reported Date']
   const xAxisLabel = 'Time'
 
-  const yValue = (d) => d.temperature
-  const yAxisLabel = 'Temperature'
+  const yValue = (d) => d['Total Dead and Missing']
+  const yAxisLabel = 'Total Dead and Missing'
 
   const xScale = scaleTime() //
     .domain(extent(data, xValue))
@@ -48,7 +48,7 @@ const App = () => {
     .range([innerHeight, 0])
     .nice()
 
-  const xAxisTickFormat = timeFormat('%a')
+  const xAxisTickFormat = timeFormat('%m/%d/%Y')
 
   // Fortunately scales can tell us their ticks
   // console.log(xScale.ticks())
@@ -87,7 +87,7 @@ const App = () => {
           xValue={xValue}
           yValue={yValue}
           tooltipFormat={xAxisTickFormat}
-          circleRadius={3}
+          circleRadius={2}
         />
       </g>
     </svg>

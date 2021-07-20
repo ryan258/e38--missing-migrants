@@ -1,5 +1,5 @@
 import React from 'react'
-import { scaleLinear, scaleTime, extent, timeFormat, bin, timeMonths, sum } from 'd3'
+import { scaleLinear, scaleTime, extent, timeFormat, bin, timeMonths, sum, max } from 'd3'
 import AxisBottom from './components/AxisBottom'
 import AxisLeft from './components/AxisLeft'
 import Marks from './components/Marks'
@@ -43,24 +43,28 @@ const App = () => {
     .range([0, innerWidth])
     .nice()
 
+  const [start, stop] = xScale.domain()
+
+  // compute the binnedData
+  const binnedData = bin() // construct our bins
+    .value(xValue) // returns the date
+    .domain(xScale.domain()) // sets min and max of dates for the whole data set
+    .thresholds(timeMonths(start, stop))(data) // all months between start and stop, computed above, which we then pass the original data into the bin generator, which then returns an array of array that we can then map over
+    .map((array) => ({
+      // maps over each of the inner arrays, which represent all the events that happened in a given month - each array is transformed into an object
+      y: sum(array, yValue), // sum of array of individual dead and missing events
+      x0: array.x0, // start date for each bin
+      x1: array.x1 // end date for each bin
+    }))
+
+  // console.log(binnedData)
+
   const yScale = scaleLinear() //
-    .domain(extent(data, yValue))
+    .domain([0, max(binnedData, (d) => d.y)])
     .range([innerHeight, 0])
     .nice()
 
-  const [start, stop] = xScale.domain()
-
-  const binnedData = bin() // construct our bins
-    .value(xValue)
-    .domain(xScale.domain())
-    .thresholds(timeMonths(start, stop))(data)
-    .map((array) => ({
-      totalDeadAndMissing: sum(array, yValue), // array of individual dead and missing events
-      x0: array.x0,
-      x1: array.x1
-    }))
-
-  console.log(binnedData)
+  console.log(yScale.domain()) // [0, 1600]
 
   const xAxisTickFormat = timeFormat('%m/%d/%Y')
 
@@ -95,13 +99,11 @@ const App = () => {
           {xAxisLabel}
         </text>
         <Marks //
-          data={data}
+          binnedData={binnedData}
           xScale={xScale}
           yScale={yScale}
-          xValue={xValue}
-          yValue={yValue}
-          tooltipFormat={xAxisTickFormat}
-          circleRadius={2}
+          tooltipFormat={(d) => d}
+          innerHeight={innerHeight}
         />
       </g>
     </svg>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { scaleLinear, scaleTime, extent, timeFormat } from 'd3'
+import { scaleLinear, scaleTime, extent, timeFormat, bin, timeMonths, sum } from 'd3'
 import AxisBottom from './components/AxisBottom'
 import AxisLeft from './components/AxisLeft'
 import Marks from './components/Marks'
@@ -27,16 +27,16 @@ const App = () => {
     return <pre>'Loading...'</pre>
   }
 
-  // console.log(data[0])
-
-  const innerHeight = height - margin.top - margin.bottom
-  const innerWidth = width - margin.right - margin.left
-
   const xValue = (d) => d['Reported Date']
   const xAxisLabel = 'Time'
 
   const yValue = (d) => d['Total Dead and Missing']
   const yAxisLabel = 'Total Dead and Missing'
+
+  // console.log(data[0])
+
+  const innerHeight = height - margin.top - margin.bottom
+  const innerWidth = width - margin.right - margin.left
 
   const xScale = scaleTime() //
     .domain(extent(data, xValue))
@@ -47,6 +47,20 @@ const App = () => {
     .domain(extent(data, yValue))
     .range([innerHeight, 0])
     .nice()
+
+  const [start, stop] = xScale.domain()
+
+  const binnedData = bin() // construct our bins
+    .value(xValue)
+    .domain(xScale.domain())
+    .thresholds(timeMonths(start, stop))(data)
+    .map((array) => ({
+      totalDeadAndMissing: sum(array, yValue), // array of individual dead and missing events
+      x0: array.x0,
+      x1: array.x1
+    }))
+
+  console.log(binnedData)
 
   const xAxisTickFormat = timeFormat('%m/%d/%Y')
 
